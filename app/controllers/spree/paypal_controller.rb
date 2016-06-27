@@ -1,47 +1,88 @@
 module Spree
   class PaypalController < StoreController
 
+    # def express
+    #   order = current_order || raise(ActiveRecord::RecordNotFound)
+    #   items = order.line_items.map(&method(:line_item))
+
+    #   additional_adjustments = order.all_adjustments.additional
+    #   tax_adjustments = additional_adjustments.tax
+    #   shipping_adjustments = additional_adjustments.shipping
+
+    #   additional_adjustments.eligible.each do |adjustment|
+    #     next if (tax_adjustments + shipping_adjustments).include?(adjustment)
+    #     items << {
+    #       :Name => adjustment.label,
+    #       :Quantity => 1,
+    #       :Amount => {
+    #         :currencyID => order.currency,
+    #         :value => adjustment.amount
+    #       }
+    #     }
+    #   end
+
+    #   # Because PayPal doesn't accept $0 items at all.
+    #   # See #10
+    #   # https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_ECCustomizing
+    #   # "It can be a positive or negative value but not zero."
+    #   items.reject! do |item|
+    #     item[:Amount][:value].zero?
+    #   end
+    #   pp_request = provider.build_set_express_checkout(express_checkout_request_details(order, items))
+
+    #   begin
+    #     pp_response = provider.set_express_checkout(pp_request)
+    #     if pp_response.success?
+    #       redirect_to provider.express_checkout_url(pp_response, :useraction => 'commit')
+    #     else
+    #       flash[:error] = Spree.t('flash.generic_error', :scope => 'paypal', :reasons => pp_response.errors.map(&:long_message).join(" "))
+    #       redirect_to checkout_state_path(:payment)
+    #     end
+    #   rescue SocketError
+    #     flash[:error] = Spree.t('flash.connection_failed', :scope => 'paypal')
+    #     redirect_to checkout_state_path(:payment)
+    #   end
+    # end
     def express
-      order = current_order || raise(ActiveRecord::RecordNotFound)
-      items = order.line_items.map(&method(:line_item))
+     order = current_order || raise(ActiveRecord::RecordNotFound)
+     items = order.line_items.map(&method(:line_item))
 
-      additional_adjustments = order.all_adjustments.additional
-      tax_adjustments = additional_adjustments.tax
-      shipping_adjustments = additional_adjustments.shipping
+     #additional_adjustments = order.all_adjustments.additional
+     additional_adjustments = order.all_adjustments
+     tax_adjustments = additional_adjustments.tax
+     shipping_adjustments = additional_adjustments.shipping
 
-      additional_adjustments.eligible.each do |adjustment|
-        next if (tax_adjustments + shipping_adjustments).include?(adjustment)
-        items << {
-          :Name => adjustment.label,
-          :Quantity => 1,
-          :Amount => {
-            :currencyID => order.currency,
-            :value => adjustment.amount
-          }
-        }
-      end
+     additional_adjustments.eligible.each do |adjustment|
+       # Because PayPal doesn't accept $0 items at all. See #10
+       # https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_ECCustomizing
+       # "It can be a positive or negative value but not zero."
+       next if adjustment.amount.zero?
+       next if tax_adjustments.include?(adjustment) || shipping_adjustments.include?(adjustment)
 
-      # Because PayPal doesn't accept $0 items at all.
-      # See #10
-      # https://cms.paypal.com/uk/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_ECCustomizing
-      # "It can be a positive or negative value but not zero."
-      items.reject! do |item|
-        item[:Amount][:value].zero?
-      end
-      pp_request = provider.build_set_express_checkout(express_checkout_request_details(order, items))
+       items << {
+         Name: adjustment.label,
+         Quantity: 1,
+         Amount: {
+           currencyID: order.currency,
+           value: adjustment.amount
+         }
+       }
+     end
 
-      begin
-        pp_response = provider.set_express_checkout(pp_request)
-        if pp_response.success?
-          redirect_to provider.express_checkout_url(pp_response, :useraction => 'commit')
-        else
-          flash[:error] = Spree.t('flash.generic_error', :scope => 'paypal', :reasons => pp_response.errors.map(&:long_message).join(" "))
-          redirect_to checkout_state_path(:payment)
-        end
-      rescue SocketError
-        flash[:error] = Spree.t('flash.connection_failed', :scope => 'paypal')
-        redirect_to checkout_state_path(:payment)
-      end
+     pp_request = provider.build_set_express_checkout(express_checkout_request_details(order, items))
+
+     begin
+       pp_response = provider.set_express_checkout(pp_request)
+       if pp_response.success?
+         redirect_to provider.express_checkout_url(pp_response, useraction: 'commit')
+       else
+         flash[:error] = Spree.t('flash.generic_error', scope: 'paypal', reasons: pp_response.errors.map(&:long_message).join(" "))
+         redirect_to checkout_state_path(:payment)
+       end
+     rescue SocketError
+       flash[:error] = Spree.t('flash.connection_failed', scope: 'paypal')
+       redirect_to checkout_state_path(:payment)
+     end
     end
 
     def confirm
@@ -87,17 +128,23 @@ module Spree
     end
 
     def express_checkout_request_details order, items
-      { :SetExpressCheckoutRequestDetails => {
-          :InvoiceID => order.number,
-          :BuyerEmail => order.email,
-          :ReturnURL => confirm_paypal_url(:payment_method_id => params[:payment_method_id], :utm_nooverride => 1),
-          :CancelURL =>  cancel_paypal_url,
-          :SolutionType => payment_method.preferred_solution.present? ? payment_method.preferred_solution : "Mark",
-          :LandingPage => payment_method.preferred_landing_page.present? ? payment_method.preferred_landing_page : "Billing",
-          :cppheaderimage => payment_method.preferred_logourl.present? ? payment_method.preferred_logourl : "",
-          :NoShipping => 1,
-          :PaymentDetails => [payment_details(items)]
-      }}
+      request_details = {
+        :InvoiceID => order.number,
+        :BuyerEmail => order.email,
+        :ReturnURL => confirm_paypal_url(:payment_method_id => params[:payment_method_id], :utm_nooverride => 1),
+        :CancelURL =>  cancel_paypal_url,
+        :SolutionType => payment_method.preferred_solution.present? ? payment_method.preferred_solution : "Mark",
+        :LandingPage => payment_method.preferred_landing_page.present? ? payment_method.preferred_landing_page : "Billing",
+        :cppheaderimage => payment_method.preferred_logourl.present? ? payment_method.preferred_logourl : "",
+        :NoShipping => payment_method.preferred_no_shipping.present? ? payment_method.preferred_no_shipping : '1',
+        :PaymentDetails => [payment_details(items)]
+      }
+
+      # Optional fields without set defaults.
+      request_details[:AddressOverride] = payment_method.preferred_address_override if payment_method.preferred_address_override.present?
+      request_details[:ReqConfirmShipping] = payment_method.preferred_req_confirmed_address if payment_method.preferred_req_confirmed_address.present?
+
+      { :SetExpressCheckoutRequestDetails => request_details }
     end
 
     def payment_method
@@ -156,15 +203,17 @@ module Spree
     def address_options
       return {} unless address_required?
 
+      address = current_order.use_billing ? current_order.bill_address : current_order.ship_address
+
       {
-          :Name => current_order.bill_address.try(:full_name),
-          :Street1 => current_order.bill_address.address1,
-          :Street2 => current_order.bill_address.address2,
-          :CityName => current_order.bill_address.city,
-          :Phone => current_order.bill_address.phone,
-          :StateOrProvince => current_order.bill_address.state_text,
-          :Country => current_order.bill_address.country.iso,
-          :PostalCode => current_order.bill_address.zipcode
+          :Name            => address.try(:full_name),
+          :Street1         => address.address1,
+          :Street2         => address.address2,
+          :CityName        => address.city,
+          :Phone           => address.phone,
+          :StateOrProvince => address.state_text,
+          :Country         => address.country.iso,
+          :PostalCode      => address.zipcode
       }
     end
 
@@ -173,7 +222,7 @@ module Spree
     end
 
     def address_required?
-      payment_method.preferred_solution.eql?('Sole')
+      payment_method.preferred_solution.eql?('Sole') || payment_method.preferred_address_override.eql?('1')
     end
   end
 end
