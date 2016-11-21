@@ -49,7 +49,7 @@ module Spree
           :token => params[:token],
           :payer_id => params[:PayerID]
         }),
-        :amount => order.outstanding_balance,
+        :amount => order.total,
         :payment_method => payment_method
       })
       order.next
@@ -120,7 +120,7 @@ module Spree
       # This calculates the item sum based upon what is in the order total, but not for shipping
       # or tax.  This is the easiest way to determine what the items should cost, as that
       # functionality doesn't currently exist in Spree core
-      item_sum = current_order.outstanding_balance - shipment_sum - current_order.additional_tax_total
+      item_sum = current_order.total - shipment_sum - current_order.additional_tax_total
 
       if item_sum.zero?
         # Paypal does not support no items or a zero dollar ItemTotal
@@ -128,14 +128,14 @@ module Spree
         {
           :OrderTotal => {
             :currencyID => current_order.currency,
-            :value => current_order.outstanding_balance
+            :value => current_order.total
           }
         }
       else
         {
           :OrderTotal => {
             :currencyID => current_order.currency,
-            :value => current_order.outstanding_balance
+            :value => current_order.total
           },
           :ItemTotal => {
             :currencyID => current_order.currency,
