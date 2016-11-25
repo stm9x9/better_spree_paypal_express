@@ -117,10 +117,28 @@ module Spree
       # For example, if shippng costs $10, and is free with a promotion, shipment_sum is now $10
       shipment_sum = current_order.shipments.map(&:discounted_cost).sum
 
+      # Handle split payments by creating a line item with a negative amount
+      if current_order.payments.valid.count > 0
+        payment_adjustment = current_order.payments.valid.sum(:amount)
+
+        items << {
+          Name: Spree.t(:payment_adjustment, :scope => 'paypal'), 
+          Quantity: 1,
+          Amount: {
+            currencyID: current_order.currency,
+            value: payment_adjustment * -1
+          }
+        }
+
+        outstanding_balance = current_order.total - payment_adjustment
+      else
+       	outstanding_balance = current_order.total
+      end
+
       # This calculates the item sum based upon what is in the order total, but not for shipping
       # or tax.  This is the easiest way to determine what the items should cost, as that
       # functionality doesn't currently exist in Spree core
-      item_sum = current_order.total - shipment_sum - current_order.additional_tax_total
+      item_sum = outstanding_balance - shipment_sum - current_order.additional_tax_total
 
       if item_sum.zero?
         # Paypal does not support no items or a zero dollar ItemTotal
@@ -128,14 +146,14 @@ module Spree
         {
           :OrderTotal => {
             :currencyID => current_order.currency,
-            :value => current_order.total
+            :value => outstanding_balance
           }
         }
       else
         {
           :OrderTotal => {
             :currencyID => current_order.currency,
-            :value => current_order.total
+            :value => outstanding_balance
           },
           :ItemTotal => {
             :currencyID => current_order.currency,
