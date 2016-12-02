@@ -49,7 +49,7 @@ module Spree
           :token => params[:token],
           :payer_id => params[:PayerID]
         }),
-        :amount => order.total,
+        :amount => outstanding_balance,
         :payment_method => payment_method
       })
       order.next
@@ -112,6 +112,14 @@ module Spree
       payment_method.provider
     end
 
+    def existing_payments
+      current_order.payments.valid.sum(:amount)
+    end
+
+    def outstanding_balance
+      current_order.total - existing_payments
+    end
+
     def payment_details items
       # This retrieves the cost of shipping after promotions are applied
       # For example, if shippng costs $10, and is free with a promotion, shipment_sum is now $10
@@ -119,20 +127,14 @@ module Spree
 
       # Handle split payments by creating a line item with a negative amount
       if current_order.payments.valid.count > 0
-        payment_adjustment = current_order.payments.valid.sum(:amount)
-
         items << {
           Name: Spree.t(:payment_adjustment, :scope => 'paypal'), 
           Quantity: 1,
           Amount: {
             currencyID: current_order.currency,
-            value: payment_adjustment * -1
+            value: existing_payments * -1
           }
         }
-
-        outstanding_balance = current_order.total - payment_adjustment
-      else
-       	outstanding_balance = current_order.total
       end
 
       # This calculates the item sum based upon what is in the order total, but not for shipping
