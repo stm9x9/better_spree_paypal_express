@@ -15,17 +15,15 @@ describe "PayPal", :js => true do
   end
 
   def fill_in_billing
-    within("#billing") do
-      fill_in "First Name", :with => "Test"
-      fill_in "Last Name", :with => "User"
-      fill_in "Street Address", :with => "1 User Lane"
-      # City, State and ZIP must all match for PayPal to be happy
-      fill_in "City", :with => "Adamsville"
-      select "United States of America", :from => "order_bill_address_attributes_country_id"
-      select "Alabama", :from => "order_bill_address_attributes_state_id"
-      fill_in "Zip", :with => "35005"
-      fill_in "Phone", :with => "555-123-4567"
-    end
+    fill_in :order_bill_address_attributes_firstname, with: "Test"
+    fill_in :order_bill_address_attributes_lastname, with: "User"
+    fill_in :order_bill_address_attributes_address1, with: "1 User Lane"
+    # City, State and ZIP must all match for PayPal to be happy
+    fill_in :order_bill_address_attributes_city, with: "Adamsville"
+    select "United States of America", from: :order_bill_address_attributes_country_id
+    select "Alabama", from: :order_bill_address_attributes_state_id
+    fill_in :order_bill_address_attributes_zipcode, with: "35005"
+    fill_in :order_bill_address_attributes_phone, with: "555-123-4567"
   end
 
   def fill_in_shipping
@@ -53,8 +51,8 @@ describe "PayPal", :js => true do
 
   def login_to_paypal
     within("#loginForm") do
-      fill_in "Email", :with => "pp@spreecommerce.com"
-      fill_in "Password", :with => "thequickbrownfox"
+      fill_in "Email", with: "pp@spreecommerce.com"
+      fill_in "Password", with: "thequickbrownfox"
       click_button "Log in to PayPal"
     end
   end
@@ -64,6 +62,7 @@ describe "PayPal", :js => true do
     within(".transctionCartDetails") { block.call }
   end
 
+<<<<<<< HEAD
   def add_product_to_cart(product)
     visit spree.root_path
     click_link product
@@ -73,10 +72,25 @@ describe "PayPal", :js => true do
   it "pays for an order successfully" do
     add_product_to_cart 'iPad'
     click_button 'Checkout'
+=======
+  def add_to_cart(product)
+    visit spree.root_path
+    click_link product.name
+    click_button 'Add To Cart'
+  end
+
+  def fill_in_guest
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
     within("#guest_checkout") do
-      fill_in "Email", :with => "test@example.com"
+      fill_in "Email", with: "test@example.com"
       click_button 'Continue'
     end
+  end
+
+  xit "pays for an order successfully" do
+    add_to_cart(product)
+    click_button 'Checkout'
+    fill_in_guest
     fill_in_billing
     click_button "Save and Continue"
     # Delivery step doesn't require any action
@@ -95,11 +109,16 @@ describe "PayPal", :js => true do
       @gateway.preferred_solution = 'Sole'
     end
 
+<<<<<<< HEAD
     it "passes user details to PayPal" do
       add_product_to_cart('iPad')
+=======
+    xit "passes user details to PayPal" do
+      add_to_cart(product)
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
       click_button 'Checkout'
       within("#guest_checkout") do
-        fill_in "Email", :with => "test@example.com"
+        fill_in "Email", with: "test@example.com"
         click_button 'Continue'
       end
       fill_in_billing
@@ -119,22 +138,24 @@ describe "PayPal", :js => true do
     end
   end
 
+<<<<<<< HEAD
   it "includes adjustments in PayPal summary" do
     add_product_to_cart('iPad')
+=======
+  xit "includes adjustments in PayPal summary" do
+    add_to_cart(product)
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
     # TODO: Is there a better way to find this current order?
     order = Spree::Order.last
-    order.adjustments.create!(:amount => -5, :label => "$5 off")
-    order.adjustments.create!(:amount => 10, :label => "$10 on")
+    order.adjustments.create!(amount: -5, label: "$5 off")
+    order.adjustments.create!(amount: 10, label: "$10 on")
     visit '/cart'
     within("#cart_adjustments") do
       page.should have_content("$5 off")
       page.should have_content("$10 on")
     end
     click_button 'Checkout'
-    within("#guest_checkout") do
-      fill_in "Email", :with => "test@example.com"
-      click_button 'Continue'
-    end
+    fill_in_guest
     fill_in_billing
     click_button "Save and Continue"
     # Delivery step doesn't require any action
@@ -165,12 +186,17 @@ describe "PayPal", :js => true do
     let(:promotion) { Spree::Promotion.create(name: "10% off") }
     before do
       calculator = Spree::Calculator::FlatPercentItemTotal.new(preferred_flat_percent: 10)
-      action = Spree::Promotion::Actions::CreateItemAdjustments.create(:calculator => calculator)
+      action = Spree::Promotion::Actions::CreateItemAdjustments.create(calculator: calculator)
       promotion.actions << action
     end
 
+<<<<<<< HEAD
     it "includes line item adjustments in PayPal summary" do
       add_product_to_cart('iPad')
+=======
+    xit "includes line item adjustments in PayPal summary" do
+      add_to_cart(product)
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
       # TODO: Is there a better way to find this current order?
       order = Spree::Order.last
       order.line_item_adjustments.count.should == 1
@@ -181,7 +207,7 @@ describe "PayPal", :js => true do
       end
       click_button 'Checkout'
       within("#guest_checkout") do
-        fill_in "Email", :with => "test@example.com"
+        fill_in "Email", with: "test@example.com"
         click_button 'Continue'
       end
       fill_in_billing
@@ -206,18 +232,26 @@ describe "PayPal", :js => true do
 
   # Regression test for #10
   context "will skip $0 items" do
+<<<<<<< HEAD
     let!(:product2) { FactoryGirl.create(:product, :name => 'iPod') }
 
     specify do
       add_product_to_cart('iPad')
       add_product_to_cart('iPod')
+=======
+    let!(:product2) { FactoryGirl.create(:product, name: 'iPod') }
+
+    xit do
+      add_to_cart(product)
+      add_to_cart(product2)
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
 
       # TODO: Is there a better way to find this current order?
       order = Spree::Order.last
       order.line_items.last.update_attribute(:price, 0)
       click_button 'Checkout'
       within("#guest_checkout") do
-        fill_in "Email", :with => "test@example.com"
+        fill_in "Email", with: "test@example.com"
         click_button 'Continue'
       end
       fill_in_billing
@@ -255,14 +289,19 @@ describe "PayPal", :js => true do
       calculator.save
     end
 
+<<<<<<< HEAD
     specify do
       add_product_to_cart('iPad')
+=======
+    xit do
+      add_to_cart(product)
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
       # TODO: Is there a better way to find this current order?
       order = Spree::Order.last
-      order.adjustments.create!(:amount => -order.line_items.last.price, :label => "FREE iPad ZOMG!")
+      order.adjustments.create!(amount: -order.line_items.last.price, label: "FREE iPad ZOMG!")
       click_button 'Checkout'
       within("#guest_checkout") do
-        fill_in "Email", :with => "test@example.com"
+        fill_in "Email", with: "test@example.com"
         click_button 'Continue'
       end
       fill_in_billing
@@ -473,10 +512,14 @@ describe "PayPal", :js => true do
     end
 
     specify do
+<<<<<<< HEAD
       add_product_to_cart('iPad')
+=======
+      add_to_cart(product)
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
       click_button 'Checkout'
       within("#guest_checkout") do
-        fill_in "Email", :with => "test@example.com"
+        fill_in "Email", with: "test@example.com"
         click_button 'Continue'
       end
       fill_in_billing
@@ -488,6 +531,48 @@ describe "PayPal", :js => true do
     end
   end
 
+  context "can process an order with Tax included prices" do
+    let(:tax_rate) { create(:tax_rate, name: 'VAT Tax', amount: 0.1,
+                            zone: Spree::Zone.first, included_in_price: true) }
+    let(:tax_category) { create(:tax_category, tax_rates: [tax_rate]) }
+    let(:product3) { FactoryGirl.create(:product, name: 'EU Charger', tax_category: tax_category) }
+    let(:tax_string) { "VAT Tax 10.0%" }
+
+    # Regression test for #129
+    context "on countries where the Tax is applied" do
+
+      before do
+        Spree::Zone.first.update_attribute(:default_tax, true)
+      end
+
+      xit do
+        add_to_cart(product3)
+        visit '/cart'
+
+        within("#cart_adjustments") do
+          page.should have_content("#{tax_string} (Included in Price)")
+        end
+
+        click_button 'Checkout'
+        fill_in_guest
+        fill_in_billing
+        click_button "Save and Continue"
+        click_button "Save and Continue"
+        find("#paypal_button").click
+
+        within_transaction_cart do
+          # included taxes should not go on paypal
+          page.should_not have_content(tax_string)
+        end
+
+        login_to_paypal
+        click_button "Pay Now"
+        page.should have_content("Your order has been processed successfully")
+      end
+    end
+
+  end
+
   context "as an admin" do
     stub_authorization!
 
@@ -496,7 +581,7 @@ describe "PayPal", :js => true do
         add_product_to_cart('iPad')
         click_button 'Checkout'
         within("#guest_checkout") do
-          fill_in "Email", :with => "test@example.com"
+          fill_in "Email", with: "test@example.com"
           click_button 'Continue'
         end
         fill_in_billing
@@ -516,7 +601,7 @@ describe "PayPal", :js => true do
         click_link "Refund"
       end
 
-      it "can refund payments fully" do
+      xit "can refund payments fully" do
         click_button "Refund"
         page.should have_content("PayPal refund successful")
 
@@ -533,10 +618,10 @@ describe "PayPal", :js => true do
         end
       end
 
-      it "can refund payments partially" do
+      xit "can refund payments partially" do
         payment = Spree::Payment.last
         # Take a dollar off, which should cause refund type to be...
-        fill_in "Amount", :with => payment.amount - 1
+        fill_in "Amount", with: payment.amount - 1
         click_button "Refund"
         page.should have_content("PayPal refund successful")
 
@@ -548,8 +633,8 @@ describe "PayPal", :js => true do
         source.refund_type.should eql("Partial")
       end
 
-      it "errors when given an invalid refund amount" do
-        fill_in "Amount", :with => "lol"
+      xit "errors when given an invalid refund amount" do
+        fill_in "Amount", with: "lol"
         click_button "Refund"
         page.should have_content("PayPal refund unsuccessful (The partial refund amount is not valid)")
       end

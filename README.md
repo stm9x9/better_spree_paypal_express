@@ -1,16 +1,30 @@
 # Spree PayPal Express
 
+<<<<<<< HEAD
 This is a "re-do" of the official [spree_paypal_express][4] extension. The old extension is extremely hard to maintain and complex.
+=======
+[![Build Status](https://travis-ci.org/spree-contrib/better_spree_paypal_express.svg?branch=master)](https://travis-ci.org/spree-contrib/better_spree_paypal_express)
+
+This is the official Paypal Express extension for Spree.
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
 
 Behind-the-scenes, this extension uses [PayPal's Merchant Ruby SDK](https://github.com/paypal/merchant-sdk-ruby).
 
 ## Installation
 
 1. Add this extension to your Gemfile with this line:
+```ruby
+gem 'spree_paypal_express', github: 'spree-contrib/better_spree_paypal_express', branch: 'X-X-stable'
+```
 
+<<<<<<< HEAD
         gem 'spree_paypal_express', github: 'spree-contrib/better_spree_paypal_express', branch: '3-0-stable'
 
 The `branch` option is important: it must match the version of Spree you're using. Use 3-0-stable if you're using Spree 3-0-stable or any 3.0.x version.
+=======
+The `branch` option is important: it must match the version of Spree you're using.
+For example, use `3-0-stable` if you're using Spree `3-0-stable` or any `3.0.x` version.
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717
 
 2. Install the gem using Bundler:
 
@@ -168,4 +182,7 @@ Copyright (c) 2013 Spree Commerce and contributors, released under the [New BSD 
 [1]: http://www.fsf.org/licensing/essays/free-sw.html
 [2]: https://github.com/spree/better_spree_paypal_express/issues
 [3]: https://github.com/spree/better_spree_paypal_express/tree/master/LICENSE.md
+<<<<<<< HEAD
 [4]: https://github.com/spree/spree_paypal_express
+=======
+>>>>>>> 9b6742e5697b6d0466f8b43c6dab18d24d4f2717

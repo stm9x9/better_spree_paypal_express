@@ -45,9 +45,9 @@ module Spree
     def confirm
       order = current_order || raise(ActiveRecord::RecordNotFound)
       order.payments.create!({
-        :source => Spree::PaypalExpressCheckout.create({
-          :token => params[:token],
-          :payer_id => params[:PayerID]
+        source: Spree::PaypalExpressCheckout.create({
+          token: params[:token],
+          payer_id: params[:PayerID]
         }),
         :amount => outstanding_balance,
         :payment_method => payment_method
@@ -64,7 +64,7 @@ module Spree
     end
 
     def cancel
-      flash[:notice] = Spree.t('flash.cancel', :scope => 'paypal')
+      flash[:notice] = Spree.t('flash.cancel', scope: 'paypal')
       order = current_order || raise(ActiveRecord::RecordNotFound)
       redirect_to checkout_state_path(order.state, paypal_cancel_token: params[:token])
     end
@@ -73,14 +73,14 @@ module Spree
 
     def line_item(item)
       {
-          :Name => item.product.name,
-          :Number => item.variant.sku,
-          :Quantity => item.quantity,
-          :Amount => {
-              :currencyID => item.order.currency,
-              :value => item.price
+          Name: item.product.name,
+          Number: item.variant.sku,
+          Quantity: item.quantity,
+          Amount: {
+              currencyID: item.order.currency,
+              value: item.price
           },
-          :ItemCategory => "Physical"
+          ItemCategory: "Physical"
       }
     end
 
@@ -157,22 +157,22 @@ module Spree
             :currencyID => current_order.currency,
             :value => outstanding_balance
           },
-          :ItemTotal => {
-            :currencyID => current_order.currency,
-            :value => item_sum
+          ItemTotal: {
+            currencyID: current_order.currency,
+            value: item_sum
           },
-          :ShippingTotal => {
-            :currencyID => current_order.currency,
-            :value => shipment_sum,
+          ShippingTotal: {
+            currencyID: current_order.currency,
+            value: shipment_sum,
           },
-          :TaxTotal => {
-            :currencyID => current_order.currency,
-            :value => current_order.additional_tax_total
+          TaxTotal: {
+            currencyID: current_order.currency,
+            value: current_order.additional_tax_total
           },
-          :ShipToAddress => address_options,
-          :PaymentDetailsItem => items,
-          :ShippingMethod => "Shipping Method Name Goes Here",
-          :PaymentAction => "Sale"
+          ShipToAddress: address_options,
+          PaymentDetailsItem: items,
+          ShippingMethod: "Shipping Method Name Goes Here",
+          PaymentAction: "Sale"
         }
       end
     end
