@@ -1,6 +1,5 @@
-//= require spree/frontend
 
-SpreePaypalExpress = {
+window.SpreePaypalExpress = {
   updateSaveAndContinueVisibility: function() {
     if (this.isButtonHidden()) {
       $(this).trigger('hideSaveAndContinue')
@@ -9,14 +8,15 @@ SpreePaypalExpress = {
     }
   },
   isButtonHidden: function () {
-    paymentMethod = this.checkedPaymentMethod();
+    var paymentMethod = this.checkedPaymentMethod();
     return (!$('#use_existing_card_yes:checked').length && SpreePaypalExpress.paymentMethodID && paymentMethod.val() == SpreePaypalExpress.paymentMethodID);
   },
   checkedPaymentMethod: function() {
     return $('div[data-hook="checkout_payment_step"] input[type="radio"][name="order[payments_attributes][][payment_method_id]"]:checked');
   },
   hideSaveAndContinue: function() {
-    $("#checkout_form_payment [data-hook=buttons]").hide();
+    //This is hiding stuff when we have previously selected paypal
+    //$("#checkout_form_payment [data-hook=buttons]").hide();
   },
   showSaveAndContinue: function() {
     $("#checkout_form_payment [data-hook=buttons]").show();
@@ -25,7 +25,7 @@ SpreePaypalExpress = {
 
 $(document).ready(function() {
   SpreePaypalExpress.updateSaveAndContinueVisibility();
-  paymentMethods = $('div[data-hook="checkout_payment_step"] input[type="radio"]').click(function (e) {
+  var paymentMethods = $('div[data-hook="checkout_payment_step"] input[type="radio"]').click(function (e) {
     SpreePaypalExpress.updateSaveAndContinueVisibility();
   });
 })
