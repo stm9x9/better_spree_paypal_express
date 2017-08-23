@@ -16,7 +16,7 @@ window.SpreePaypalExpress = {
   },
   hideSaveAndContinue: function() {
     //This is hiding stuff when we have previously selected paypal
-    //$("#checkout_form_payment [data-hook=buttons]").hide();
+    $("#checkout_form_payment [data-hook=buttons]").hide();
   },
   showSaveAndContinue: function() {
     $("#checkout_form_payment [data-hook=buttons]").show();
